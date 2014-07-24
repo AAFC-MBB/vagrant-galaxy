@@ -8,7 +8,9 @@ from fabric.api import *
 from fabtools.vagrant import vagrant
 import ConfigParser
 
-universe_wsgi = './galaxy-dist/universe_wsgi.ini'
+galaxy_path = '/galaxy'
+universe_wsgi = "%s/universe_wsgi.ini" % galaxy_path
+galaxy_log = "%s/galaxy.log" % galaxy_path
 
 ################
 # Galaxy process
@@ -23,24 +25,30 @@ def galaxy(cmd):
         stop_galaxy()
     elif(cmd=='restart'):
         restart_galaxy()
+    elif(cmd=='log'):
+        showlog_galaxy()
     else:
         print "Invalid directive to Galaxy"
         
 def start_galaxy():
-    with cd('/vagrant/galaxy-dist'):
-        sudo('./run.sh --daemon')
+    with cd(galaxy_path):
+        run('./run.sh --daemon --log-file=%s' % galaxy_log)
 def stop_galaxy():
-    with cd('/vagrant/galaxy-dist'):
-        sudo('./run.sh --stop-daemon')
+    with cd(galaxy_path):
+        run('./run.sh --stop-daemon')
         
 def restart_galaxy():
-    with cd('/vagrant/galaxy-dist'):
-        sudo('./run.sh --stop-daemon')
-        sudo('./run.sh --daemon')
+    with cd(galaxy_path):
+        run('./run.sh --stop-daemon')
+        run('./run.sh --daemon --log-file=%s' % galaxy_log)
 
-def status():
-    with cd('/vagrant/galaxy-dist'):
-        sudo('./run.sh --status')
+def status_galaxy():
+    with cd(galaxy_path):
+        run('./run.sh --status')
+
+def showlog_galaxy():
+    with cd(galaxy_path):
+        run('cat %s' % galaxy_log)
 
 # Tool Shed
 @task
@@ -53,25 +61,30 @@ def toolshed(cmd):
         stop_toolshed()
     elif(cmd=='restart'):
         restart_toolshed()
+    elif(cmd=='log'):
+        showlog_toolshed()
     else:
         print "Invalid directive to Galaxy Toolshed"
         
 def start_toolshed():
-    with cd('/vagrant/galaxy-dist'):
+    with cd(galaxy_path):
         run('./run_tool_shed.sh --daemon')
 def stop_toolshed():
-    with cd('/vagrant/galaxy-dist'):
+    with cd(galaxy_path):
         run('./run_tool_shed.sh --stop-daemon')
         
 def restart_toolshed():
-    with cd('/vagrant/galaxy-dist'):
+    with cd(galaxy_path):
         run('./run_tool_shed.sh --stop-daemon')
         run('./run_tool_shed.sh --daemon')
 
 def toolshed_status():
-    with cd('/vagrant/galaxy-dist'):
+    with cd(galaxy_path):
         run('./run_tool_shed.sh --status')
 
+def showlog_toolshed():
+    with cd(galaxy_path):
+        run('%s/tool_shed_webapp.log' % galaxy_path)
 #############################
 # software package management
 @task
