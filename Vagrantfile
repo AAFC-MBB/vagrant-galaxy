@@ -1,12 +1,18 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-#def prompt(*args)
-#	print (*args)
-#	gets
-#end
 
-#username = prompt "AAFC User ID: "
+def prompt_credentials()
+  unless ENV.has_key?('GALAXY_USER') and ENV.has_key?('GALAXY_PASSWORD') then
+    STDOUT.puts 'Please provide a username and password to register with Galaxy'
+    STDOUT.puts 'Username: '
+    ENV['GALAXY_USER'] = STDIN.gets
+    STDOUT.puts 'Passsword: '
+    ENV['GALAXY_PASSWORD'] = STDIN.gets
+  else
+    STDOUT.puts 'Using GALAXY_USER=%s parameter from environment ' % ENV['GALAXY_USER']
+  end
+end
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
@@ -31,7 +37,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
-  config.vm.network :forwarded_port, guest: 80, host: 8080
+  config.vm.network :forwarded_port, guest: 8080, host: 8080
   config.vm.network :forwarded_port, guest: 9009, host: 9009
 
 
@@ -46,12 +52,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # using a specific IP.
   config.vm.network :private_network, ip: "192.168.33.10"
 
-
-  # Create a public network, which generally matched to bridged network.
-  # Bridged networks make the machine appear as another physical device on
-  # your network.
-  # config.vm.network :public_network
-
-  config.vm.provision "shell", path: "provision_galaxy.sh", args: [ ENV['GALAXY_USER'], ENV['GALAXY_PASSWORD'] ]
-
+  config.vm.provision "shell" do |script|
+    script.path = "provision_galaxy.sh"
+    script.args = [ ENV['GALAXY_USER'], ENV['GALAXY_PASSWORD'] ]
+  end
 end

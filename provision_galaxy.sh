@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 export GALAXY_PORT="8080"
 export TOOLSHED_PORT="9009"
 export GALAXYPATH="/galaxy"
@@ -65,6 +64,10 @@ find . -type d -name galaxy-galaxy-dist\* -exec rm -rf '{}' \;
 
 cd "$GALAXYPATH"
 
+# Avoid storing cached eggs in Vagrant home folder
+mkdir 'egg-cache'
+export PYTHON_EGG_CACHE="$GALAXYPATH/egg-cache"
+
 # Configure galaxy
 echo "Configuring galaxy..."
 cp -r "$CONFIGPATH/." "$GALAXYPATH/"
@@ -82,8 +85,10 @@ sh run_tool_shed.sh &
 
 EOF
 
+sleep 2s
+
 echo "Registering Galaxy user $GALAXY_USER"
-wget -O - "http://localhost:8080/user/create?cntrller=user" --post-data='email=$GALAXY_USER&password=$GALAXY_PASSWORD&confirm=$GALAXY_PASSWORD&username=$GALAXY_PUBLICID&bear_field=&create_user_button=Submit' > /dev/null
+wget "http://$(hostname -s):8080/user/create?cntrller=user" --post-data="email=$GALAXY_USER&password=$GALAXY_PASSWORD&confirm=$GALAXY_PASSWORD&username=$GALAXY_PUBLICID&bear_field=&create_user_button=Submit"
 
 echo "Galaxy setup completed successfully."
 echo "To begin using galaxy, navigate to http://localhost/"
