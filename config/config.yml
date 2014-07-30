@@ -1,0 +1,17 @@
+galaxy:
+  path: /galaxy
+  config-path: /vagrant/config/galaxy
+  source-repo: https://bitbucket.org/galaxy/galaxy-dist
+  release-tag: release_2014.02.10
+  port: 8080
+  toolshed-port: 9009
+  user: galaxy_user@agr.gc.ca
+  password: temp_password
+vm:
+  box: precise64
+  box_url: http://files.vagrantup.com/precise64.box
+  ip: 192.168.10.10
+  memory: 4096
+  port_forward:
+    8080: 8080
+    9009: 9009
