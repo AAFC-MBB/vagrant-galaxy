@@ -6,12 +6,14 @@ galaxy:
   port: 8080
   toolshed-port: 9009
   user: galaxy_user@agr.gc.ca
+  publicid: galaxyuser
   password: temp_password
 vm:
   box: precise64
   box_url: http://files.vagrantup.com/precise64.box
   ip: 192.168.10.10
   memory: 4096
+  cpus: 6
   port_forward:
     8080: 8080
     9009: 9009

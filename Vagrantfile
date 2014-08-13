@@ -42,6 +42,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box_url = conf['vm']['box_url']
 
   config.vm.provider "virtualbox" do |v|
+    v.gui = true
+    v.customize ["modifyvm", :id, '--cpus', conf['vm']['cpus']]
     v.customize ["modifyvm", :id, "--memory", conf['vm']['memory']]
   end
 
@@ -65,7 +67,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision "shell" do |script|
     script.path = "provision_galaxy.sh"
-    script.args = '-p "%s" -c "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s"' % [ 
+    script.args = '-p "%s" -c "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s"' % [ 
       conf['galaxy']['path'],
       conf['galaxy']['config-path'],
       conf['galaxy']['source-repo'],
@@ -73,7 +75,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       conf['galaxy']['port'].to_s,
       conf['galaxy']['toolshed-port'].to_s,
       conf['galaxy']['user'],
-      conf['galaxy']['password']
+      conf['galaxy']['password'],
+      conf['galaxy']['publicid']
     ]
   end
 end

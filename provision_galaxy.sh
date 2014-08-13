@@ -1,10 +1,14 @@
 # DEBUG FLAG to facilitate pinpointing problems
 # 0 = off, 1 = minimal, 2 = verbose
-DEBUG=1
+_DEBUG=1
+function DEBUG(){
+	[ "$_DEBUG" == "1" ] && $@
+	[ "$_DEBUG" == "2" ] && set -x; $@; set +x
+}
 
-[[ $DEBUG -eq 2 ]] && set -x
+export LOGFILE=/dev/null
 
-[[ $DEBUG -eq 1 ]] && echo $@
+DEBUG echo "$@"
 
 # Load options from command line
 # TODO: add validation to options
@@ -29,16 +33,19 @@ while getopts p:c:s:r:o:t:u:a: opt; do
 		export TOOLSHEDPORT=$OPTARG
 	;;
 	u)
-		export GALAXY_USER=$OPTARG
+		export GALAXYUSER=$OPTARG
+	;;
+	i)
+		export GALAXYPUBLICID=$OPTARG
 	;;
 	a)
-		export GALAXY_PASSWORD=$OPTARG
+		export GALAXYPASSWORD=$OPTARG
 	;;
 	esac
 done
 
 # Validate that the username and password are set
-if [[ -z "$GALAXY_USER" || -z "$GALAXY_PASSWORD" ]]; then
+if [[ -z "$GALAXYUSER" || -z "$GALAXYPASSWORD" ]]; then
 	echo "The GALAXY_USER and GALAXY_PASSWORD environment variables must be set before using vagrant up." 1>&2
 	echo "Please export them from your .bashrc file or  set them in the ./config/config.yml" 1>&2
 
@@ -47,30 +54,34 @@ fi
 
 # Parse the public id from e-mail by discarding the domain portion
 IFS="@"
-set -- $GALAXY_USER
+set -- $GALAXYUSER
 if [ "${#@}" -ne 2 ];then
 	echo "The GALAXY_USER parameter must be an e-mail address." 1>&2
-	echo "$GALAXY_USER is invalid!" 1>&2
+	echo "$GALAXYUSER is invalid!" 1>&2
 	exit 0
 fi
-GALAXY_PUBLICID="$1"
 
 # Validate password is at least 6 characters
-if [ $(echo ${#GALAXY_PASSWORD}) -lt 6 ]; then
+if [ $(echo ${#GALAXYPASSWORD}) -lt 6 ]; then
 	echo "The GALAXY_PASSWORD parameter must be 6 characters long." 1>&2
 	exit 0
 fi
 
-# Update mercurial repository to latest version
-echo "Adding mercurial PPA and updating Apt cache"
-echo 'deb http://ppa.launchpad.net/mercurial-ppa/releases/ubuntu precise main' > /etc/apt/sources.list.d/mercurial-precise.list
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys f59ce3a8323293ee 2>/dev/null
+echo "Updating apt repository cache"
+apt-get -y -q update 1>$LOGFILE
 
-apt-get update 1> /dev/null
+echo "Installing python, vim, bzip2, python-software-properties"
+apt-get -y -q install python vim bzip2 python-software-properties 1>$LOGFILE
+
+
+# Update mercurial repository to latest version
+echo "Adding mercurial PPA and updating apt repository cache"
+add-apt-repository -y ppa:mercurial-ppa/releases 2>&1 1>$LOGFILE
+apt-get -y -q update 1> /dev/null
 
 # Install required software
-echo "Installing software: mercurial, python, vim, bzip2"
-apt-get -y install mercurial python vim bzip2  1> /dev/null
+echo "Installing mercurial from PPA"
+#apt-get -y -q install mercurial 1>$LOGFILE
 
 # Make the galaxy folder if it doesn't already exist
 if [ -d "$GALAXYPATH" ]; then
@@ -80,15 +91,12 @@ if [ -d "$GALAXYPATH" ]; then
 	exit 0
 else
 	echo "Creating galaxy folder: $GALAXYPATH"
-	mkdir -p "$GALAXYPATH"
+	mkdir "$GALAXYPATH"
 fi
 
-chown vagrant "$GALAXYPATH"
+chown vagrant.vagrant "$GALAXYPATH"
 
 su vagrant << EOF
-
-[[ $DEBUG -eq 2 ]] && set -x
-
 # Change directory to avoid specifying paths in other commands
 cd /vagrant/
 
@@ -102,7 +110,7 @@ else
 fi
 
 echo "Extracting $GALAXYRELEASE.tar.bz2"
-tar xvf ${GALAXYRELEASE}.tar.bz2 1> /dev/null
+tar xvf ${GALAXYRELEASE}.tar.bz2 1>$LOGFILE
 
 echo "Moving extracted folder to $GALAXYPATH"
 find . -type d -name "galaxy-galaxy-dist*" -exec cp -r '{}/.' "$GALAXYPATH/" \;
@@ -122,28 +130,31 @@ echo "export PYTHON_EGG_CACHE=$GALAXYPATH/egg-cache" >> ~/.bashrc
 
 # Change the ports in the configuration accordingly
 echo " - modifying Galaxy and Tool Shed ports to $GALAXYPORT and $TOOLSHEDPORT, respectively."
-PERL_COMMAND='s/^#?port\s*=.*$/port = '$GALAXYPORT
-perl -p -i -e "$PERL_COMMAND" "$GALAXYPATH/universe_wsgi.ini"
-PERL_COMMAND='s/^#?port\s*=.*$/port = '$TOOLSHEDPORT
-perl -p -i -e "$PERL_COMMAND" "$GALAXYPATH/tool_shed_wsgi.ini"
+perl -p -i -e 's/^#?port\s*=.*$/port = '$GALAXYPORT'/' "$GALAXYPATH/universe_wsgi.ini"
+perl -p -i -e 's/^#?port\s*=.*$/port = '$TOOLSHEDPORT'/' "$GALAXYPATH/tool_shed_wsgi.ini"
 
-# Set the GALAXY_USER as an admin in galaxy and the tool shed
-echo " - setting the admin users parameter to $GALAXY_USER"
-PERL_COMMAND='$user = "'$GALAXY_USER'"; $user =~ s/\@/\\\@/; s/^#?(admin_users\s*=.*)$/$1,$user/;'
+# Set the GALAXYUSER as an admin in galaxy and the tool shed
+echo " - setting the admin users parameter to $GALAXYUSER"
+PERL_COMMAND='$user = "'$GALAXYUSER'"; $user =~ s/\@/\\\@/; s/^#?(admin_users\s*=.*)$/$1,$user/;'
 perl -p -i -e "$PERL_COMMAND" "$GALAXYPATH/universe_wsgi.ini"
 perl -p -i -e "$PERL_COMMAND" "$GALAXYPATH/tool_shed_wsgi.ini"
 
 # Start galaxy & the tool shed
 echo "Running Galaxy daemon"
-sh run.sh --daemon --log-file=galaxy.log 1> /dev/null
+sh run.sh --daemon --log-file=galaxy.log 1>$LOGFILE
 
 echo "Running Galaxy Tool Shed"
 sh run_tool_shed.sh &
 
 EOF
 
-echo "Registering Galaxy user $GALAXY_USER"
-wget "http://$(hostname -s):$GALAXY_PORT/user/create?cntrller=user" --post-data="email=$GALAXY_USER&password=$GALAXY_PASSWORD&confirm=$GALAXY_PASSWORD&username=$GALAXY_PUBLICID&bear_field=&create_user_button=Submit"
+#Wait for the eggs to finish downloading and galaxy to start before trying to connect
+sleep 10
+
+echo "Registering Galaxy user $GALAXYUSER"
+wget --retry-connrefused --waitretry=5 --tries=20 --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_toolshed" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$TOOLSHEDPORT/user/create?cntrller=user"
+wget --retry-connrefused --waitretry=5 --tries=20 --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_galaxy" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$GALAXYPORT/user/create?cntrller=user"
 
 echo "Galaxy setup completed successfully."
-echo "To begin using galaxy, navigate to http://localhost/"
+echo "To begin using galaxy, navigate to http://localhost:$GALAXYPORT/.  Your username and password are '$GALAXYUSER' and '$GALAXYPASSWORD'"
+echo "To access the tool shed, navigate to http://localhost:$TOOLSHEDPORT/.  The credentials are the same as the above."
