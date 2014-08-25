@@ -18,7 +18,7 @@ galaxy_log = "%s/galaxy.log" % galaxy_path
 @task
 def galaxy(cmd):
     if(cmd=='status'):
-        status()
+        status_galaxy()
     elif(cmd=='start'):
         start_galaxy()        
     elif(cmd=='stop'):

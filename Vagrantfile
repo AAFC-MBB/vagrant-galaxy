@@ -1,6 +1,6 @@
 require 'yaml'
 
-debug = true
+debug = false
 
 current_dir = File.dirname(__FILE__)
 

@@ -118,6 +118,8 @@ find . -type d -name "galaxy-galaxy-dist*" -exec rm -rf '{}' \;
 
 cd "$GALAXYPATH"
 
+chmod u+x run_tool_shed.sh
+
 # Configure galaxy
 echo "Configuring Galaxy"
 cp -r "$CONFIGPATH/." "$GALAXYPATH/"
@@ -144,7 +146,7 @@ echo "Running Galaxy daemon"
 sh run.sh --daemon --log-file=galaxy.log 1>$LOGFILE
 
 echo "Running Galaxy Tool Shed"
-sh run_tool_shed.sh &
+sh run_tool_shed.sh --daemon 1>$LOGFILE
 
 EOF
 
