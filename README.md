@@ -12,7 +12,7 @@ Requirements
 Note - the easiest way to install Fabric is through pip (or easy_install):
 
 ```
- pip install fabric
+ pip install fabric fabtools
 ```
 
 Installation
@@ -26,7 +26,7 @@ Installation
 Point your browser at http://localhost:8080/ after starting up the galaxy server.  You can do this via fabric (see below), for convenience, or you can do it manually like so:
 ```
  vagrant ssh
- cd /vagrant/galaxy-dist
+ cd /galaxy
  ./run.sh --daemon
 ```
 
@@ -65,9 +65,6 @@ The syntax is identical to starting the galaxy server:
  fab vagrant toolshed:status
 ```
 
-### Admin users
-For both the galaxy and toolshed servers, the default admin user is vagrant@galaxy.local
-
 Simply create a new user in each webapp with that e-mail address to access the admin menus 
 (or add your own admin user to the config files).
 
@@ -77,8 +74,10 @@ This feature is still in development, but the basic usage is as follows:
  fab vagrant config:OPTION,VALUE
 ```
 
+Configuration
+-------------
 
-Future direction
-----------------
-* Add other virtual providers: VMWare and AWS
-* Replace the shell provisioner with ansible or fabric
+See the config/config.yml [VM] section for supported VM configuration options.
+See the config/config.yml [Galaxy] section galaxy options that get set on provisioning.  Hence, modifying the galaxy section after the VM is provisioned will not alter Galaxy's configuration.
+
+
