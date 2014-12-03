@@ -10,8 +10,10 @@ export LOGFILE=/dev/null
 
 DEBUG echo "$@"
 
+# Get the directory, which contains all the other scripts
+scriptdir=`dirname "$0"`
+
 # Load options from command line
-# TODO: add validation to options
 while getopts p:c:s:r:o:t:u:a: opt; do
 	case $opt in
 	p)
@@ -44,56 +46,13 @@ while getopts p:c:s:r:o:t:u:a: opt; do
 	esac
 done
 
-# Validate that the username and password are set
-if [[ -z "$GALAXYUSER" || -z "$GALAXYPASSWORD" ]]; then
-	echo "The GALAXY_USER and GALAXY_PASSWORD environment variables must be set before using vagrant up." 1>&2
-	echo "Please export them from your .bashrc file or  set them in the ./config/config.yml" 1>&2
+# Setup Galaxy parameters
+"$scriptdir/setup_galaxy.sh"
 
-	exit 0
-fi
+# Install some essentials in the vm
+"$scriptdir/install_software.sh"
 
-# Parse the public id from e-mail by discarding the domain portion
-IFS="@"
-set -- $GALAXYUSER
-if [ "${#@}" -ne 2 ];then
-	echo "The GALAXY_USER parameter must be an e-mail address." 1>&2
-	echo "$GALAXYUSER is invalid!" 1>&2
-	exit 0
-fi
-
-# Validate password is at least 6 characters
-if [ $(echo ${#GALAXYPASSWORD}) -lt 6 ]; then
-	echo "The GALAXY_PASSWORD parameter must be 6 characters long." 1>&2
-	exit 0
-fi
-
-echo "Updating apt repository cache"
-apt-get -y -q update 1>$LOGFILE
-
-echo "Installing python, vim, bzip2, python-software-properties"
-apt-get -y -q install python vim bzip2 python-software-properties 1>$LOGFILE
-
-
-# Update mercurial repository to latest version
-echo "Adding mercurial PPA and updating apt repository cache"
-add-apt-repository -y ppa:mercurial-ppa/releases 2>&1 1>$LOGFILE
-apt-get -y -q update 1> /dev/null
-
-# Install required software
-echo "Installing mercurial from PPA"
-#apt-get -y -q install mercurial 1>$LOGFILE
-
-# Make the galaxy folder if it doesn't already exist
-if [ -d "$GALAXYPATH" ]; then
-	echo "Galaxy folder already exists: $GALAXYPATH"
-	echo 'Ending provisioning to avoid clobbering data!'
-	echo 'To re-provision, either remove the /galaxy folder within the VM or use "vagrant destroy".' 1>&2
-	exit 0
-else
-	echo "Creating galaxy folder: $GALAXYPATH"
-	mkdir "$GALAXYPATH"
-fi
-
+# Some galaxy setup
 chown vagrant.vagrant "$GALAXYPATH"
 
 su vagrant << EOF

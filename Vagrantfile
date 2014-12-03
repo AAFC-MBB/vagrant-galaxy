@@ -65,8 +65,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # using a specific IP.
   config.vm.network :private_network, ip: conf['vm']['ip']
 
+  # Copy the other scritpts over
+  config.vm.provision "file", source: "setup_galaxy.sh", destination: "scripts/setup_galaxy.sh"
+  config.vm.provision "file", source: "install_software.sh", destination: "scripts/install_software.sh"
+
   config.vm.provision "shell" do |script|
     script.path = "provision_galaxy.sh"
+    script.upload_path="scripts/provision_galaxy.sh"
     script.args = '-p "%s" -c "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s"' % [ 
       conf['galaxy']['path'],
       conf['galaxy']['config-path'],
