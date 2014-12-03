@@ -1,13 +1,27 @@
+# Load options (GALAXYPATH, LOGFILE)
+
+export LOGFILE=/dev/null
+
+while getopts p: opt; do
+    case $opt in
+    p)
+        export GALAXYPATH=$OPTARG
+    ;;
+    esac
+done
+
 echo "Updating apt repository cache"
 apt-get -y -q update 1>$LOGFILE
 
 echo "Installing python, vim, bzip2, python-software-properties"
-apt-get -y -q install python vim bzip2 python-software-properties 1>$LOGFILE
+apt-get -y -q install python vim bzip2 python-software-properties 1> $LOGFILE
 
+echo "Installing build essential"
+apt-get -y -q install build-essential 1>$LOGFILE
 
 # Update mercurial repository to latest version
 echo "Adding mercurial PPA and updating apt repository cache"
-add-apt-repository -y ppa:mercurial-ppa/releases 2>&1 1>$LOGFILE
+add-apt-repository -y ppa:mercurial-ppa/releases 2>&1 1> $LOGFILE
 apt-get -y -q update 1> /dev/null
 
 # Install required software

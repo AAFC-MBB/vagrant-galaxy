@@ -8,6 +8,8 @@ function DEBUG(){
 
 export LOGFILE=/dev/null
 
+echo $LOGFILE
+
 DEBUG echo "$@"
 
 # Get the directory, which contains all the other scripts
@@ -70,7 +72,7 @@ if [ $(echo ${#GALAXYPASSWORD}) -lt 6 ]; then
 fi
 
 # Install some essentials in the vm
-"$scriptdir/install_software.sh"
+#"$scriptdir/install_software.sh"
 
 # Setup Galaxy parameters
-"$scriptdir/setup_galaxy.sh"
+#"$scriptdir/setup_galaxy.sh"

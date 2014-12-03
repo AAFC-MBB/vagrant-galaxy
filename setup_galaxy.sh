@@ -1,3 +1,40 @@
+#get options
+
+# Load options from command line
+while getopts p:c:s:r:o:t:u:a: opt; do
+	case $opt in
+	p)
+		export GALAXYPATH=$OPTARG
+	;;
+	c)
+		export CONFIGPATH=$OPTARG
+	;;
+	s)
+		export GALAXYREPO=$OPTARG
+	;;
+	r)
+		export GALAXYRELEASE=$OPTARG
+	;;
+	o)
+		export GALAXYPORT=$OPTARG
+	;;
+	t)
+		export TOOLSHEDPORT=$OPTARG
+	;;
+	u)
+		export GALAXYUSER=$OPTARG
+	;;
+	i)
+		export GALAXYPUBLICID=$OPTARG
+	;;
+	a)
+		export GALAXYPASSWORD=$OPTARG
+	;;
+	esac
+done
+
+export LOGFILE=/dev/null
+
 # Some galaxy setup
 chown vagrant.vagrant "$GALAXYPATH"
 
