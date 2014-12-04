@@ -64,9 +64,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   config.vm.network :private_network, ip: conf['vm']['ip']
+  
+  config.vm.provision "shell" do |script|
+    script.path = "install_software.sh"
+    script.args = '-p "%s"' % [ 
+      conf['galaxy']['path']
+    ]
+  end
 
   config.vm.provision "shell" do |script|
-    script.path = "provision_galaxy.sh"
+    script.path = "setup_galaxy.sh"
     script.args = '-p "%s" -c "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s"' % [ 
       conf['galaxy']['path'],
       conf['galaxy']['config-path'],
