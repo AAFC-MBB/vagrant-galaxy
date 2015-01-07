@@ -18,7 +18,7 @@ Note - the easiest way to install Fabric is through pip (or easy_install):
 Installation
 ------------
 ```
- git clone https://github.com/Smithsonian/vagrant-galaxy.git
+ git clone https://github.com/AAFC-MBB/vagrant-galaxy.git
  cd vagrant-galaxy
  vagrant up
 ```
