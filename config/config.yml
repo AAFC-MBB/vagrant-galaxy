@@ -9,8 +9,8 @@ galaxy:
   publicid: galaxyuser
   password: temp_password
 vm:
-  box: precise64
-  box_url: http://files.vagrantup.com/precise64.box
+  box: aafc/centos-7.0
+  box_url: http://packer.biodiversity.agr.gc.ca/virtualbox/centos70-1406_x86_64_minimal.box
   ip: 192.168.10.10
   memory: 4096
   cpus: 6

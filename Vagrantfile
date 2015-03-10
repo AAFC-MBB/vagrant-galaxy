@@ -66,7 +66,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network :private_network, ip: conf['vm']['ip']
   
   config.vm.provision "shell" do |script|
-    script.path = "install_software.sh"
+    if config.vm.box == "aafc/centos-7.0"
+      script.path = "install_software_centos-7.0.sh"
+    else
+      script.path = "install_software.sh"
+    end
+      
     script.args = '-p "%s"' % [ 
       conf['galaxy']['path']
     ]
