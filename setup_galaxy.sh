@@ -73,12 +73,22 @@ if [[ -z $TSCONFSAMPLE ]]; then
 	exit 1
 fi
 
+TSLCONFSAMPLE=$(find "$GALAXYPATH" -name "tool_sheds_conf.xml.sample")
+if [[ -z $TSLCONFSAMPLE ]]; then
+	echo "Failed to locate the tool shed configuration file - tool_shed_wsgi.ini.sample or tool_shed.ini.sample ." 1>&2
+	exit 1
+fi
+
+
+
 GALAXYCONF=${GALAXYCONFSAMPLE%.sample}
 TSCONF=${TSCONFSAMPLE%.sample}
+TSLCONF=${TSLCONFSAMPLE%.sample}
 
 # Create the configuration files from the provided samples
 cp "$GALAXYCONFSAMPLE" "$GALAXYCONF"
 cp "$TSCONFSAMPLE" "$TSCONF"
+cp "$TSLCONFSAMPLE" "$TSLCONF"
 
 # The run tool shed script must be executable for the fab commands to work
 chmod u+x run_tool_shed.sh
@@ -112,6 +122,10 @@ echo " - setting the admin users parameter to $GALAXYUSER"
 perl -p -i -e "my \$user = qw/$GALAXYUSER/; s/^#?(admin_users\s*=\s*)None$/\$1 \$user/;" "$GALAXYCONF"
 # different example text in  tool_shed_wsgi.ini
 perl -p -i -e "my \$user = qw/$GALAXYUSER/; s/^#?(admin_users\s*=\s*)user1.*$/\$1 \$user/;" "$TSCONF"
+
+# Enable the local toolshed
+echo " - adding local Tool Shed to $TSLCONF"
+perl -p -i -e 's#</tool_sheds>#    <tool_shed name="Local tool shed" url="http://localhost:'$TOOLSHEDPORT'/"/>\n</tool_sheds>#' "$TSLCONF"
 
 # Start galaxy & the tool shed
 echo "Running Galaxy daemon"
