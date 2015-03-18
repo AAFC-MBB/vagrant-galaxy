@@ -38,6 +38,10 @@ export LOGFILE=/dev/null
 #sudo mkdir -p "$GALAXYPATH"
 sudo chown vagrant.vagrant "$GALAXYPATH"
 
+# TODO this should perhaps be a parameter and /galaxy/shed_tool_conf.xml updated accordingly
+sudo mkdir /shed_tools
+sudo chown vagrant.vagrant /shed_tools
+
 #su vagrant <<'EOF'
 # Change directory to avoid specifying paths in other commands
 cd /vagrant/
