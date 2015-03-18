@@ -78,10 +78,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.provision "shell" do |script|
+    script.privileged = false
     script.path = "setup_galaxy.sh"
-    script.args = '-p "%s" -c "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s"' % [ 
+    script.args = '-p "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s"' % [ 
       conf['galaxy']['path'],
-      conf['galaxy']['config-path'],
+#      conf['galaxy']['config-path'],
       conf['galaxy']['source-repo'],
       conf['galaxy']['release-tag'],
       conf['galaxy']['port'].to_s,

@@ -1,14 +1,14 @@
 #get options
 
 # Load options from command line
-while getopts p:c:s:r:o:t:u:a: opt; do
+while getopts p:s:r:o:t:u:i:a: opt; do
 	case $opt in
 	p)
 		export GALAXYPATH=$OPTARG
 	;;
-	c)
-		export CONFIGPATH=$OPTARG
-	;;
+#	c)
+#		export CONFIGPATH=$OPTARG
+#	;;
 	s)
 		export GALAXYREPO=$OPTARG
 	;;
@@ -35,10 +35,10 @@ done
 
 export LOGFILE=/dev/null
 
-# Some galaxy setup
-chown vagrant.vagrant "$GALAXYPATH"
+#sudo mkdir -p "$GALAXYPATH"
+sudo chown vagrant.vagrant "$GALAXYPATH"
 
-su vagrant << EOF
+#su vagrant <<'EOF'
 # Change directory to avoid specifying paths in other commands
 cd /vagrant/
 
@@ -60,11 +60,28 @@ find . -type d -name "galaxy-galaxy-dist*" -exec rm -rf '{}' \;
 
 cd "$GALAXYPATH"
 
-chmod u+x run_tool_shed.sh
+# Locate the sample configuration files as they get moved depending on the galaxy version
+GALAXYCONFSAMPLE=$(find "$GALAXYPATH" -name "universe_wsgi.ini.sample" -or -name "galaxy.ini.sample")
+if [[ -z $GALAXYCONFSAMPLE ]]; then
+	echo "Failed to locate Galaxy's configuration file - galaxy.ini.sample or universe_wsgi.ini.sample ." 1>&2
+	exit 1
+fi
 
-# Configure galaxy
-echo "Configuring Galaxy"
-cp -r "$CONFIGPATH/." "$GALAXYPATH/"
+TSCONFSAMPLE=$(find "$GALAXYPATH" -name "tool_shed_wsgi.ini.sample" -or -name "tool_shed.ini.sample")
+if [[ -z $TSCONFSAMPLE ]]; then
+	echo "Failed to locate the tool shed configuration file - tool_shed_wsgi.ini.sample or tool_shed.ini.sample ." 1>&2
+	exit 1
+fi
+
+GALAXYCONF=${GALAXYCONFSAMPLE%.sample}
+TSCONF=${TSCONFSAMPLE%.sample}
+
+# Create the configuration files from the provided samples
+cp "$GALAXYCONFSAMPLE" "$GALAXYCONF"
+cp "$TSCONFSAMPLE" "$TSCONF"
+
+# The run tool shed script must be executable for the fab commands to work
+chmod u+x run_tool_shed.sh
 
 # Avoid storing cached eggs in Vagrant home folder
 echo " - modifying location of egg cache"
@@ -72,16 +89,25 @@ mkdir 'egg-cache'
 export PYTHON_EGG_CACHE="$GALAXYPATH/egg-cache"
 echo "export PYTHON_EGG_CACHE=$GALAXYPATH/egg-cache" >> ~/.bashrc
 
+# Change the tool dependency directory
+echo " - modifying Galaxy's tool depedency directory to $GALAXYPATH/tool-dep"
+perl -p -i -e "s#^\#?tool_dependency_dir\s*=.*$/tool_dependency_dir = $GALAXYPATH/tool-dep#" "$GALAXYCONF"
+
+# Change the default interface that Galaxy binds to 0.0.0.0
+echo " - modifying Galaxy and tool Shed interface bindings"
+perl -p -i -e 's/host\s=.*$/host = 0.0.0.0/' "$GALAXYCONF"
+perl -p -i -e 's/host\s=.*$/host = 0.0.0.0/' "$TSCONF"
+
 # Change the ports in the configuration accordingly
 echo " - modifying Galaxy and Tool Shed ports to $GALAXYPORT and $TOOLSHEDPORT, respectively."
-perl -p -i -e 's/^#?port\s*=.*$/port = '$GALAXYPORT'/' "$GALAXYPATH/universe_wsgi.ini"
-perl -p -i -e 's/^#?port\s*=.*$/port = '$TOOLSHEDPORT'/' "$GALAXYPATH/tool_shed_wsgi.ini"
+perl -p -i -e 's/^#?port\s*=.*$/port = '$GALAXYPORT'/' "$GALAXYCONF"
+perl -p -i -e 's/^#?port\s*=.*$/port = '$TOOLSHEDPORT'/' "$TSCONF"
 
 # Set the GALAXYUSER as an admin in galaxy and the tool shed
 echo " - setting the admin users parameter to $GALAXYUSER"
-PERL_COMMAND='$user = "'$GALAXYUSER'"; $user =~ s/\@/\\\@/; s/^#?(admin_users\s*=.*)$/$1,$user/;'
-perl -p -i -e "$PERL_COMMAND" "$GALAXYPATH/universe_wsgi.ini"
-perl -p -i -e "$PERL_COMMAND" "$GALAXYPATH/tool_shed_wsgi.ini"
+PERL_COMMAND='$user = "'$GALAXYUSER'"; $user =~ s/\@/\\\@/; s/^#?(admin_users\s*=\s*)$/$1 $user/;'
+perl -p -i -e "$PERL_COMMAND" "$GALAXYCONF"
+perl -p -i -e "$PERL_COMMAND" "$TSCONF"
 
 # Start galaxy & the tool shed
 echo "Running Galaxy daemon"
@@ -89,8 +115,6 @@ sh run.sh --daemon --log-file=galaxy.log 1>$LOGFILE
 
 echo "Running Galaxy Tool Shed"
 sh run_tool_shed.sh --daemon 1>$LOGFILE
-
-EOF
 
 #Wait for the eggs to finish downloading and galaxy to start before trying to connect
 sleep 10

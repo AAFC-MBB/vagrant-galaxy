@@ -1,6 +1,6 @@
 galaxy:
   path: /galaxy
-  config-path: /vagrant/config/galaxy
+#  config-path: /vagrant/config/galaxy
   source-repo: https://bitbucket.org/galaxy/galaxy-dist
   release-tag: release_2014.02.10
   port: 8080
