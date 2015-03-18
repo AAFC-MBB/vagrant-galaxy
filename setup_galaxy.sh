@@ -94,14 +94,18 @@ echo " - modifying Galaxy's tool depedency directory to $GALAXYPATH/tool-dep"
 perl -p -i -e 's#^\#?tool_dependency_dir\s*=.*$#tool_dependency_dir = $GALAXYPATH/tool-dep#' "$GALAXYCONF"
 
 # Change the default interface that Galaxy binds to 0.0.0.0
+# restrict context to first 40 or 20 lines as a hack to keep within the [server:main] section
 echo " - modifying Galaxy and tool Shed interface bindings"
-perl -p -i -e 's/host\s=.*$/host = 0.0.0.0/' "$GALAXYCONF"
-perl -p -i -e 's/host\s=.*$/host = 0.0.0.0/' "$TSCONF"
+perl -p -i -e 's/^#?host\s=.*$/host = 0.0.0.0/ if 1 .. 40' "$GALAXYCONF"
+# tool_shed_wsgi.ini.sample has host twice, once commented out and once not;
+# update the uncommented version
+perl -p -i -e 's/^host\s=.*$/host = 0.0.0.0/ if 1 .. 20' "$TSCONF"
 
 # Change the ports in the configuration accordingly
+# restrict context to first 40 or 20 lines as a hack to keep within the [server:main] section
 echo " - modifying Galaxy and Tool Shed ports to $GALAXYPORT and $TOOLSHEDPORT, respectively."
-perl -p -i -e 's/^#?port\s*=.*$/port = '$GALAXYPORT'/' "$GALAXYCONF"
-perl -p -i -e 's/^#?port\s*=.*$/port = '$TOOLSHEDPORT'/' "$TSCONF"
+perl -p -i -e 's/^#?port\s*=.*$/port = '$GALAXYPORT'/ if 1 .. 40' "$GALAXYCONF"
+perl -p -i -e 's/^#?port\s*=.*$/port = '$TOOLSHEDPORT'/ if 1 .. 20' "$TSCONF"
 
 # Set the GALAXYUSER as an admin in galaxy and the tool shed
 echo " - setting the admin users parameter to $GALAXYUSER"
