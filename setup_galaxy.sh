@@ -91,7 +91,7 @@ echo "export PYTHON_EGG_CACHE=$GALAXYPATH/egg-cache" >> ~/.bashrc
 
 # Change the tool dependency directory
 echo " - modifying Galaxy's tool depedency directory to $GALAXYPATH/tool-dep"
-perl -p -i -e "s#^\#?tool_dependency_dir\s*=.*$/tool_dependency_dir = $GALAXYPATH/tool-dep#" "$GALAXYCONF"
+perl -p -i -e 's#^\#?tool_dependency_dir\s*=.*$#tool_dependency_dir = $GALAXYPATH/tool-dep#' "$GALAXYCONF"
 
 # Change the default interface that Galaxy binds to 0.0.0.0
 echo " - modifying Galaxy and tool Shed interface bindings"
