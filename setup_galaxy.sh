@@ -56,7 +56,7 @@ tar xvf ${GALAXYRELEASE}.tar.bz2 1>$LOGFILE
 
 echo "Moving extracted folder to $GALAXYPATH"
 find . -type d -name "galaxy-galaxy-dist*" -exec cp -r '{}/.' "$GALAXYPATH/" \;
-find . -type d -name "galaxy-galaxy-dist*" -exec rm -rf '{}' \;
+find . -depth -type d -name "galaxy-galaxy-dist*" -exec rm -rf '{}' \;
 
 cd "$GALAXYPATH"
 
