@@ -109,9 +109,9 @@ perl -p -i -e 's/^#?port\s*=.*$/port = '$TOOLSHEDPORT'/ if 1 .. 20' "$TSCONF"
 
 # Set the GALAXYUSER as an admin in galaxy and the tool shed
 echo " - setting the admin users parameter to $GALAXYUSER"
-PERL_COMMAND='$user = "'$GALAXYUSER'"; $user =~ s/\@/\\\@/; s/^#?(admin_users\s*=\s*)$/$1 $user/;'
-perl -p -i -e "$PERL_COMMAND" "$GALAXYCONF"
-perl -p -i -e "$PERL_COMMAND" "$TSCONF"
+perl -p -i -e "my \$user = qw/$GALAXYUSER/; s/^#?(admin_users\s*=\s*)None$/\$1 \$user/;" "$GALAXYCONF"
+# different example text in  tool_shed_wsgi.ini
+perl -p -i -e "my \$user = qw/$GALAXYUSER/; s/^#?(admin_users\s*=\s*)user1.*$/\$1 \$user/;" "$TSCONF"
 
 # Start galaxy & the tool shed
 echo "Running Galaxy daemon"
