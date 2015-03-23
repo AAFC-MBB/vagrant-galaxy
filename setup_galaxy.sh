@@ -131,20 +131,43 @@ perl -p -i -e "my \$user = qw/$GALAXYUSER/; s/^#?(admin_users\s*=\s*)user1.*$/\$
 echo " - adding local Tool Shed to $TSLCONF"
 perl -p -i -e 's#</tool_sheds>#    <tool_shed name="Local tool shed" url="http://localhost:'$TOOLSHEDPORT'/"/>\n</tool_sheds>#' "$TSLCONF"
 
+# Function that starts Galaxy and Tool Shed and waits for the 'serving on' message to appear in their logs
+function start_and_wait {
+	COMMAND=$1
+	PIDFILE=$2
+	GLOGFILE=$3
+
+	./$COMMAND --daemon --pid-file=$PIDFILE --log-file=$GLOGFILE 2>&1 > $LOGFILE
+	if [ ! -f $PIDFILE ]; then
+		echo "The PID file $PIDFILE was not found after running ./$COMMAND" 1>&2
+		exit 1
+	fi
+
+	while ps < $PIDFILE > /dev/null; do
+		grep "^serving on" $GLOGFILE && echo " - started successfully!" && return 0
+		sleep 1
+	done
+
+	echo " - failed to start!" 1>&2
+	return 1
+}
+
 # Start galaxy & the tool shed
-echo "Running Galaxy daemon"
-sh run.sh --daemon --log-file=galaxy.log 1>$LOGFILE
 
-echo "Running Galaxy Tool Shed"
-sh run_tool_shed.sh --daemon 1>$LOGFILE
+echo "Starting Galaxy"
+echo " - this can take several minutes"
+start_and_wait "run.sh" "galaxy.pid" "galaxy.log"
 
-#Wait for the eggs to finish downloading and galaxy to start before trying to connect
-sleep 10
+echo "Starting Galaxy Tool Shed"
+start_and_wait "run_tool_shed.sh" "toolshed.pid" "toolshed.log"
 
-echo "Registering Galaxy user $GALAXYUSER"
-wget --retry-connrefused --waitretry=5 --tries=20 --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_toolshed" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$TOOLSHEDPORT/user/create?cntrller=user"
-wget --retry-connrefused --waitretry=5 --tries=20 --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_galaxy" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$GALAXYPORT/user/create?cntrller=user"
+echo "Registering Galaxy and Tool Shed user $GALAXYUSER"
+wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_toolshed" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$TOOLSHEDPORT/user/create?cntrller=user"
+wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_galaxy" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$GALAXYPORT/user/create?cntrller=user"
 
+echo "=========================================================="
 echo "Galaxy setup completed successfully."
-echo "To begin using galaxy, navigate to http://localhost:$GALAXYPORT/.  Your username and password are '$GALAXYUSER' and '$GALAXYPASSWORD'"
-echo "To access the tool shed, navigate to http://localhost:$TOOLSHEDPORT/.  The credentials are the same as the above."
+echo "Galaxy URL - http://<HOSTNAME>:$GALAXYPORT/"
+echo "Galaxy Tool Shed URL - http://<HOSTNAME>:$TOOLSHEDPORT/"
+echo " Username: $GALAXYUSER   Password: $GALAXYPASSWORD"
+echo "=========================================================="
