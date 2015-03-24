@@ -1,8 +1,17 @@
 #get options
 
+STARTGALAXY=0
+STARTTS=0
+
 # Load options from command line
-while getopts p:s:r:o:t:u:i:a: opt; do
+while getopts p:s:r:o:t:u:i:a:xz opt; do
 	case $opt in
+	z)
+		export STARTGALAXY=1
+	;;
+	x)
+		export STARTTS=1
+	;;
 	p)
 		export GALAXYPATH=$OPTARG
 	;;
@@ -154,16 +163,21 @@ function start_and_wait {
 
 # Start galaxy & the tool shed
 
-echo "Starting Galaxy"
-echo " - this can take several minutes"
-start_and_wait "run.sh" "galaxy.pid" "galaxy.log"
+if [ $STARTGALAXY == 1 ]; then
+	echo "Starting Galaxy"
+	echo " - this can take several minutes"
+	start_and_wait "run.sh" "galaxy.pid" "galaxy.log"
+	echo "Registering Galaxy user $GALAXYUSER"
+	wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_galaxy" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$GALAXYPORT/user/create?cntrller=user"
+fi
 
-echo "Starting Galaxy Tool Shed"
-start_and_wait "run_tool_shed.sh" "toolshed.pid" "toolshed.log"
+if [ $STARTTS == 1 ]; then
+	echo "Starting Galaxy Tool Shed"
+	start_and_wait "run_tool_shed.sh" "toolshed.pid" "toolshed.log"
+	echo "Registering Tool Shed user $GALAXYUSER"
+	wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_toolshed" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$TOOLSHEDPORT/user/create?cntrller=user"
+fi
 
-echo "Registering Galaxy and Tool Shed user $GALAXYUSER"
-wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_toolshed" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$TOOLSHEDPORT/user/create?cntrller=user"
-wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_galaxy" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$GALAXYPORT/user/create?cntrller=user"
 
 echo "=========================================================="
 echo "Galaxy setup completed successfully."

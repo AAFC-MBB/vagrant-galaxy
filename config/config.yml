@@ -11,9 +11,15 @@ galaxy:
 vm:
   box: aafc/centos-7.0
   box_url: http://packer.biodiversity.agr.gc.ca/virtualbox/centos70-1406_x86_64_minimal.box
-  ip: 192.168.10.10
-  memory: 4096
-  cpus: 6
-  port_forward:
-    8080: 8080
-    9009: 9009
+  galaxy:
+    ip: 192.168.10.10
+    memory: 4096
+    cpus: 6
+    port_forward:
+      8080: 8080
+  toolshed:
+    ip: 192.168.10.11
+    memory: 2048
+    cpus: 1
+    port_forward:
+      9009: 9009

@@ -37,34 +37,79 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = conf['vm']['box']
 
-  # The url from where the 'config.vm.box' box will be fetched if it
-  # doesn't already exist on the user's system.
-  config.vm.box_url = conf['vm']['box_url']
+  config.vm.define "galaxy" do |galaxy|
 
-  config.vm.provider "virtualbox" do |v|
-    v.gui = true
-    v.customize ["modifyvm", :id, '--cpus', conf['vm']['cpus']]
-    v.customize ["modifyvm", :id, "--memory", conf['vm']['memory']]
-  end
-
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine. In the example below,
-  # accessing "localhost:8080" will access port 80 on the guest machine.
-  conf['vm']['port_forward'].each do |guest_port, host_port|
-    config.vm.network :forwarded_port, guest: guest_port, host: host_port
-  end
-
-#  config.vm.provider "parallels" do |pa, override|
-#  end
-
-#  config.vm.provider "virtualbox" do |vb, override|
-#  end
-
-
-  # Create a private network, which allows host-only access to the machine
-  # using a specific IP.
-  config.vm.network :private_network, ip: conf['vm']['ip']
+    # Create a private network, which allows host-only access to the machine
+    # using a specific IP.
+    galaxy.vm.network :private_network, ip: conf['vm']['galaxy']['ip']
   
+    galaxy.vm.provider "virtualbox" do |v|
+      v.gui = true
+      v.customize ["modifyvm", :id, '--cpus', conf['vm']['galaxy']['cpus']]
+      v.customize ["modifyvm", :id, "--memory", conf['vm']['galaxy']['memory']]
+    end
+
+    # Create a forwarded port mapping which allows access to a specific port
+    # within the machine from a port on the host machine. In the example below,
+    # accessing "localhost:8080" will access port 80 on the guest machine.
+    conf['vm']['galaxy']['port_forward'].each do |guest_port, host_port|
+      galaxy.vm.network :forwarded_port, guest: guest_port, host: host_port
+    end
+
+    config.vm.provision "shell" do |script|
+      script.privileged = false
+      script.path = "setup_galaxy.sh"
+      script.args = '-p "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s" -z' % [ 
+        conf['galaxy']['path'],
+  #      conf['galaxy']['config-path'],
+        conf['galaxy']['source-repo'],
+        conf['galaxy']['release-tag'],
+        conf['galaxy']['port'].to_s,
+        conf['galaxy']['toolshed-port'].to_s,
+        conf['galaxy']['user'],
+        conf['galaxy']['password'],
+        conf['galaxy']['publicid']
+      ]
+    end
+  end
+
+  config.vm.define "toolshed" do |toolshed|
+    # Create a private network, which allows host-only access to the machine
+    # using a specific IP.
+    toolshed.vm.network :private_network, ip: conf['vm']['toolshed']['ip']
+  
+    toolshed.vm.provider "virtualbox" do |v|
+      v.gui = true
+      v.customize ["modifyvm", :id, '--cpus', conf['vm']['toolshed']['cpus']]
+      v.customize ["modifyvm", :id, "--memory", conf['vm']['toolshed']['memory']]
+    end
+
+    # Create a forwarded port mapping which allows access to a specific port
+    # within the machine from a port on the host machine. In the example below,
+    # accessing "localhost:8080" will access port 80 on the guest machine.
+    conf['vm']['toolshed']['port_forward'].each do |guest_port, host_port|
+      toolshed.vm.network :forwarded_port, guest: guest_port, host: host_port
+    end
+
+    config.vm.provision "shell" do |script|
+      script.privileged = false
+      script.path = "setup_galaxy.sh"
+      script.args = '-p "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s" -x' % [ 
+        conf['galaxy']['path'],
+  #      conf['galaxy']['config-path'],
+        conf['galaxy']['source-repo'],
+        conf['galaxy']['release-tag'],
+        conf['galaxy']['port'].to_s,
+        conf['galaxy']['toolshed-port'].to_s,
+        conf['galaxy']['user'],
+        conf['galaxy']['password'],
+        conf['galaxy']['publicid']
+      ]
+    end
+
+  end
+
+
   config.vm.provision "shell" do |script|
     if config.vm.box == "aafc/centos-7.0"
       script.path = "install_software_centos-7.0.sh"
@@ -77,19 +122,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ]
   end
 
-  config.vm.provision "shell" do |script|
-    script.privileged = false
-    script.path = "setup_galaxy.sh"
-    script.args = '-p "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s"' % [ 
-      conf['galaxy']['path'],
-#      conf['galaxy']['config-path'],
-      conf['galaxy']['source-repo'],
-      conf['galaxy']['release-tag'],
-      conf['galaxy']['port'].to_s,
-      conf['galaxy']['toolshed-port'].to_s,
-      conf['galaxy']['user'],
-      conf['galaxy']['password'],
-      conf['galaxy']['publicid']
-    ]
-  end
+
+#  config.vm.provider "parallels" do |pa, override|
+#  end
+
+#  config.vm.provider "virtualbox" do |vb, override|
+#  end
+
+
 end
