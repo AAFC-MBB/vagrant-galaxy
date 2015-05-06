@@ -8,6 +8,7 @@ galaxy:
   user: galaxy_user@agr.gc.ca
   publicid: galaxyuser
   password: temp_password
+  hostname: localhost
 vm:
   box: aafc/centos-7.0
   box_url: http://packer.biodiversity.agr.gc.ca/virtualbox/centos70-1406_x86_64_minimal.box

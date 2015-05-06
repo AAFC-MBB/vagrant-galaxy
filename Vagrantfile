@@ -80,7 +80,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "shell" do |script|
     script.privileged = false
     script.path = "setup_galaxy.sh"
-    script.args = '-p "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s"' % [ 
+    script.args = '-p "%s" -s "%s" -r "%s" -o "%s" -t "%s" -u "%s" -a "%s" -i "%s" -h "%s"' % [ 
       conf['galaxy']['path'],
 #      conf['galaxy']['config-path'],
       conf['galaxy']['source-repo'],
@@ -89,7 +89,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       conf['galaxy']['toolshed-port'].to_s,
       conf['galaxy']['user'],
       conf['galaxy']['password'],
-      conf['galaxy']['publicid']
+      conf['galaxy']['publicid'],
+      conf['galaxy']['hostname']
     ]
   end
 end

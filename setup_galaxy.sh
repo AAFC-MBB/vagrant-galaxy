@@ -1,7 +1,7 @@
 #get options
 
 # Load options from command line
-while getopts p:s:r:o:t:u:i:a: opt; do
+while getopts p:s:r:o:t:u:i:a:h: opt; do
 	case $opt in
 	p)
 		export GALAXYPATH=$OPTARG
@@ -29,7 +29,11 @@ while getopts p:s:r:o:t:u:i:a: opt; do
 	;;
 	a)
 		export GALAXYPASSWORD=$OPTARG
-	;;
+		;;
+	h)
+	    export HOSTNAME=$OPTARG
+	    ;;
+	
 	esac
 done
 
@@ -129,7 +133,7 @@ perl -p -i -e "my \$user = qw/$GALAXYUSER/; s/^#?(admin_users\s*=\s*)user1.*$/\$
 
 # Enable the local toolshed
 echo " - adding local Tool Shed to $TSLCONF"
-perl -p -i -e 's#</tool_sheds>#    <tool_shed name="Local tool shed" url="http://localhost:'$TOOLSHEDPORT'/"/>\n</tool_sheds>#' "$TSLCONF"
+perl -p -i -e 's#</tool_sheds>#    <tool_shed name="Local tool shed" url="http://'$HOSTNAME':'$TOOLSHEDPORT'/"/>\n</tool_sheds>#' "$TSLCONF"
 
 # Function that starts Galaxy and Tool Shed and waits for the 'serving on' message to appear in their logs
 function start_and_wait {
@@ -162,12 +166,12 @@ echo "Starting Galaxy Tool Shed"
 start_and_wait "run_tool_shed.sh" "toolshed.pid" "toolshed.log"
 
 echo "Registering Galaxy and Tool Shed user $GALAXYUSER"
-wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_toolshed" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$TOOLSHEDPORT/user/create?cntrller=user"
-wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_galaxy" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://localhost:$GALAXYPORT/user/create?cntrller=user"
+wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_toolshed" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://$HOSTNAME:$TOOLSHEDPORT/user/create?cntrller=user"
+wget --output-file="$LOGFILE" --output-document="$GALAXYPATH/register_user_galaxy" --post-data="email=$GALAXYUSER&password=$GALAXYPASSWORD&confirm=$GALAXYPASSWORD&username=$GALAXYPUBLICID&bear_field=&create_user_button=Submit" "http://$HOSTNAME:$GALAXYPORT/user/create?cntrller=user"
 
 echo "=========================================================="
 echo "Galaxy setup completed successfully."
-echo "Galaxy URL - http://<HOSTNAME>:$GALAXYPORT/"
-echo "Galaxy Tool Shed URL - http://<HOSTNAME>:$TOOLSHEDPORT/"
+echo "Galaxy URL - http://$HOSTNAME:$GALAXYPORT/"
+echo "Galaxy Tool Shed URL - http://$HOSTNAME:$TOOLSHEDPORT/"
 echo " Username: $GALAXYUSER   Password: $GALAXYPASSWORD"
 echo "=========================================================="
