@@ -19,7 +19,7 @@ yum -y update 1>$LOGFILE
 
 echo "Installing python, vim, bzip2, python-software-properties"
 # apt-get -y -q install python vim bzip2 python-software-properties 1> $LOGFILE
-yum -y install python vim bzip2 1>$LOGFILE
+yum -y install python python-devel vim bzip2 1>$LOGFILE
 
 echo "Installing build essential"
 # apt-get -y -q install build-essential 1>$LOGFILE
