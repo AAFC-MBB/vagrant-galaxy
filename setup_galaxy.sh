@@ -51,20 +51,21 @@ sudo chown vagrant.vagrant /shed_tools
 cd /vagrant/
 
 # Download the target release if it doesn't exist
-if [ ! -f $GALAXYRELEASE.tar.bz2 ]; then
+if [ ! -f $GALAXYRELEASE.zip ]; then
 	# Get galaxy
-	echo "Downloading Galaxy $GALAXYRELEASE: $GALAXYREPO/get/$GALAXYRELEASE.tar.bz2"
-	wget $GALAXYREPO/get/$GALAXYRELEASE.tar.bz2
+	echo "Downloading Galaxy $GALAXYRELEASE: $GALAXYREPO/archive/$GALAXYRELEASE.zip"
+	wget $GALAXYREPO/archive/$GALAXYRELEASE.zip
 else
-	echo "$GALAXYRELEASE.tar.bz2 already exists - skipping download."
+	echo "$GALAXYRELEASE.zip already exists - skipping download."
 fi
 
-echo "Extracting $GALAXYRELEASE.tar.bz2"
-tar xvf ${GALAXYRELEASE}.tar.bz2 1>$LOGFILE
+echo "Extracting $GALAXYRELEASE.zip"
+#tar xvf ${GALAXYRELEASE}.zip 1>$LOGFILE
+unzip ${GALAXYRELEASE}.zip 1>$LOGFILE
 
 echo "Moving extracted folder to $GALAXYPATH"
-find . -type d -name "galaxy-galaxy-dist*" -exec cp -r '{}/.' "$GALAXYPATH/" \;
-find . -depth -type d -name "galaxy-galaxy-dist*" -exec rm -rf '{}' \;
+find . -type d -name "galaxy-$GALAXYRELEASE" -exec cp -r '{}/.' "$GALAXYPATH/" \;
+find . -depth -type d -name "galaxy-$GALAXYRELEASE" -exec rm -rf '{}' \;
 
 cd "$GALAXYPATH"
 

@@ -34,8 +34,11 @@ echo "Adding mercurial PPA and updating apt repository cache"
 #echo "Installing mercurial from PPA"
 #apt-get -y -q install mercurial 1>$LOGFILE
 
-echo "Installing mercurial"
-yum -y install hg
+#echo "Installing mercurial"
+#yum -y install hg
+
+echo "Installing unzip"
+yum -y install unzip
 
 # Specific to centos 7 (different even for centos 6.5)
 # Warning: Disabling built-in firewall entirely to allow 
