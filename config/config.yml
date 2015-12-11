@@ -1,8 +1,9 @@
 galaxy:
   path: /galaxy
+  config-path: /galaxy/config
 #  config-path: /vagrant/config/galaxy
-  source-repo: https://bitbucket.org/galaxy/galaxy-dist
-  release-tag: release_2014.02.10
+  source-repo: https://github.com/galaxyproject/galaxy
+  release-tag: release_15.07
   port: 8080
   toolshed-port: 9009
   user: galaxy_user@agr.gc.ca
