@@ -41,6 +41,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # doesn't already exist on the user's system.
   config.vm.box_url = conf['vm']['box_url']
 
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
+
   config.vm.provider "virtualbox" do |v|
     v.gui = true
     v.customize ["modifyvm", :id, '--cpus', conf['vm']['cpus']]

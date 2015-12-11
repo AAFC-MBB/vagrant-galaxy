@@ -6,17 +6,21 @@ Vagrant launcher for Galaxy (http://galaxyproject.org/)
 Requirements
 ------------
 * Download and install VirtualBox (https://www.virtualbox.org/)
-* Download and install Vagrant (http://www.vagrantup.com/)
+* Download and install Vagrant v1.7+ (http://www.vagrantup.com/)
 * Download and install Fabric (http://fabfile.org/)
 
-Note - the easiest way to install Fabric is through pip (or easy_install):
-
+Important Notes:
+- The easiest way to install Fabric is through pip (or easy_install):
 ```
  pip install fabric fabtools
 ```
+- Install the vagrant-cachier plugin to speed up re-provisioning of the VM
+```
+vagrant plugin install vagrant-cachier
+```
 
-Installation
-------------
+Getting Started
+---------------
 ```
  git clone https://github.com/AAFC-MBB/vagrant-galaxy.git
  cd vagrant-galaxy
@@ -79,5 +83,4 @@ Configuration
 
 See the config/config.yml [VM] section for supported VM configuration options.
 See the config/config.yml [Galaxy] section galaxy options that get set on provisioning.  Hence, modifying the galaxy section after the VM is provisioned will not alter Galaxy's configuration.
-
 
