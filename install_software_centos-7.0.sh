@@ -15,18 +15,18 @@ done
 
 echo "Updating yum repository cache"
 yum --enablerepo=updates clean metadata
-yum -y update 1>$LOGFILE
+#yum -y update 1>$LOGFILE
 
-echo "Installing python, vim, bzip2, python-software-properties"
+echo "Installing python, python-devel, vim"
 # apt-get -y -q install python vim bzip2 python-software-properties 1> $LOGFILE
-yum -y install python python-devel vim bzip2 1>$LOGFILE
+yum -y install python python-devel vim 1>$LOGFILE
 
 echo "Installing build essential"
 # apt-get -y -q install build-essential 1>$LOGFILE
 yum -y install make automake gcc gcc-c++ kernel-devel 1>$LOGFILE
 
 # Update mercurial repository to latest version
-echo "Adding mercurial PPA and updating apt repository cache"
+#echo "Adding mercurial PPA and updating apt repository cache"
 #add-apt-repository -y ppa:mercurial-ppa/releases 2>&1 1> $LOGFILE
 #apt-get -y -q update 1> /dev/null
 
@@ -36,9 +36,6 @@ echo "Adding mercurial PPA and updating apt repository cache"
 
 #echo "Installing mercurial"
 #yum -y install hg
-
-echo "Installing unzip"
-yum -y install unzip
 
 # Specific to centos 7 (different even for centos 6.5)
 # Warning: Disabling built-in firewall entirely to allow 
